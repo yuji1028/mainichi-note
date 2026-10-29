@@ -1,4 +1,333 @@
-<!doctype html>
+<!doctype html><!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#173f35">
+<title>毎日ノート</title>
+<style>
+:root{--ink:#18352e;--green:#1d6b52;--mint:#e1f2e9;--line:#dce6df;--bg:#f3f6f2}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,sans-serif;line-height:1.5}
+header{background:var(--ink);color:white;padding:20px 16px;border-radius:0 0 22px 22px}
+h1{font-size:25px;margin:0}
+header p{margin:3px 0 0;font-size:14px}
+main{max-width:720px;margin:auto;padding:12px 12px 90px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:8px 2px}
+input,textarea,button{font:inherit}
+input[type=date]{padding:10px;border:1px solid var(--line);border-radius:10px;background:white;max-width:160px}
+.card{background:white;border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0}
+.card h2{font-size:18px;margin:0 0 10px}
+.sub,.note{font-size:13px;color:#64756f}
+.sub{margin:-5px 0 12px}
+.habits{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.habit{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:12px 8px;font-size:14px;font-weight:650;min-height:58px}
+.habit:has(input:checked){background:var(--mint);border-color:#8fc5a8}
+input[type=checkbox]{width:22px;height:22px;accent-color:var(--green);flex-shrink:0}
+.bar{height:9px;background:#edf1ed;border-radius:9px;margin-top:12px;overflow:hidden}
+.bar div{height:100%;background:var(--green);width:0}
+.progresslabel{display:flex;justify-content:space-between;font-size:13px;color:#64756f;margin-top:5px}
+.field{margin:12px 0}
+label.fieldlabel{display:block;font-weight:650;font-size:14px;margin-bottom:5px}
+textarea,input[type=text],input[type=number]{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:white;color:var(--ink)}
+textarea{min-height:75px;resize:vertical}
+.row{display:flex;gap:8px;align-items:center}
+.row .grow{flex:1;min-width:0}
+button{border:0;border-radius:10px;padding:11px 13px;min-height:44px;font-weight:700;cursor:pointer}
+.primary{background:var(--green);color:white}
+.secondary{background:var(--mint);color:var(--ink)}
+.danger{background:#fae9e7;color:#a63c38}
+.small{padding:7px 9px;min-height:34px;font-size:13px}
+.tasklist{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.task,.historyitem{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:10px;padding:9px}
+.task span,.historyitem .info{flex:1;overflow-wrap:anywhere}
+.task.done span{text-decoration:line-through;color:#64756f}
+.expense{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding:9px 0}
+.expense:last-child{border-bottom:0}
+.expense .name{flex:1;overflow-wrap:anywhere}
+.total{background:var(--mint);border-radius:11px;padding:12px;display:flex;justify-content:space-between;font-weight:700;margin-top:10px}
+.total strong{font-size:22px}
+.empty{font-size:14px;color:#64756f;padding:8px 0}
+.status{font-size:13px;color:var(--green);min-height:19px}
+.view{display:none}
+.view.active{display:block}
+.nav{position:fixed;bottom:0;left:0;right:0;background:#fffffff0;border-top:1px solid var(--line);display:flex;justify-content:center;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom))}
+.nav button{flex:1;max-width:240px;background:transparent;color:#64756f;font-size:13px}
+.nav button.active{background:var(--mint);color:var(--ink)}
+.quote{background:#fff9ed;border-left:3px solid #f3b65c;border-radius:0 8px 8px 0;padding:9px 12px;font-size:14px}
+.note{line-height:1.6}
+@media(max-width:390px){.card{padding:12px}.row.wrap{flex-wrap:wrap}.row.wrap>*{flex:1 1 100%}}
+</style>
+</head>
+<body>
+<header>
+<h1>📘 毎日ノート</h1>
+<p>完璧じゃなくていい。今日の一歩を残そう。</p>
+</header>
+<main>
+<div class="top">
+<div>
+<strong id="dayLabel">今日の記録</strong>
+<div id="saveLabel" class="status">この端末に自動保存</div>
+</div>
+<input type="date" id="datePicker" aria-label="日付">
+</div>
+
+<div id="todayView" class="view active">
+<section class="card">
+<h2>🌱 今日の習慣</h2>
+<p class="sub">できたものにチェック。できない日があっても大丈夫。</p>
+<div class="habits">
+<label class="habit"><input type="checkbox" data-h="squat">スクワット 20回</label>
+<label class="habit"><input type="checkbox" data-h="push">腕立て伏せ 10回</label>
+<label class="habit"><input type="checkbox" data-h="situp">腹筋 20回</label>
+<label class="habit"><input type="checkbox" data-h="natto">納豆を食べる</label>
+<label class="habit"><input type="checkbox" data-h="miso">味噌汁を飲む</label>
+</div>
+<div class="bar"><div id="progress"></div></div>
+<div class="progresslabel"><span>今日の達成度</span><strong id="progressText">0 / 5</strong></div>
+</section>
+
+<section class="card">
+<h2>🧭 今日やること</h2>
+<p class="sub">大事なことを1つ決めるだけでもOK。</p>
+<div class="row">
+<input id="taskInput" class="grow" type="text" maxlength="120" placeholder="例：洗濯、勉強10分">
+<button id="addTask" class="primary">追加</button>
+</div>
+<div id="taskList" class="tasklist"></div>
+<div class="field">
+<label class="fieldlabel" for="doneText">実際にやったこと</label>
+<textarea id="doneText" placeholder="小さなことでも記録しよう"></textarea>
+</div>
+</section>
+
+<section class="card">
+<h2>💭 1日の振り返り</h2>
+<div class="field">
+<label class="fieldlabel" for="goodText">今日よかったこと</label>
+<textarea id="goodText" placeholder="よかったことを1つだけでも"></textarea>
+</div>
+<div class="field">
+<label class="fieldlabel" for="reflectText">気づいたこと・反省</label>
+<textarea id="reflectText" placeholder="自分を責めず、次に活かせることを"></textarea>
+</div>
+<div class="field">
+<label class="fieldlabel" for="tomorrowText">明日の最初の一歩</label>
+<textarea id="tomorrowText" placeholder="明日、最初にやること"></textarea>
+</div>
+<div class="quote">続けるコツは「ゼロにしない」こと。1つ記録できたら、それで前進。</div>
+</section>
+
+<section class="card">
+<h2>💴 今日の支出</h2>
+<div class="row wrap">
+<input id="expenseName" class="grow" type="text" maxlength="100" placeholder="何に使った？">
+<input id="expenseAmount" type="number" inputmode="numeric" min="0" step="1" placeholder="金額（円）" style="max-width:135px">
+<button id="addExpense" class="primary">追加</button>
+</div>
+<div id="expenseList"></div>
+<div class="total"><span>今日の合計</span><strong id="expenseTotal">0円</strong></div>
+</section>
+</div>
+
+<div id="historyView" class="view">
+<section class="card">
+<h2>🗓️ 過去の記録</h2>
+<p class="sub">日付を選んで、その日の記録を見たり編集したりできます。</p>
+<div id="historyList"></div>
+<p class="note">記録はこのブラウザ内に保存されます。ブラウザのデータ消去や端末変更に備え、定期的にバックアップしてください。</p>
+</section>
+<section class="card">
+<h2>🧰 バックアップ</h2>
+<p class="sub">記録をファイルとして書き出せます。</p>
+<div class="row wrap">
+<button id="exportBtn" class="primary">記録をバックアップ</button>
+<label class="secondary" style="display:inline-flex;align-items:center;justify-content:center;border-radius:10px;padding:11px 13px;font-weight:700;min-height:44px;cursor:pointer">バックアップを読み込む<input type="file" id="importFile" accept="application/json,.json" style="display:none"></label>
+</div>
+<p id="backupStatus" class="status"></p>
+</section>
+<section class="card">
+<h2>🔒 記録について</h2>
+<p class="note">記録は外部サーバーへ送信せず、この端末のブラウザ内に保存します。プライベートブラウズやブラウザデータの消去では保存が消えることがあります。重要な情報やパスワードは記録しないでください。</p>
+</section>
+</div>
+</main>
+
+<nav class="nav">
+<button id="navToday" class="active">☀️ 今日の記録</button>
+<button id="navHistory">🗓️ 履歴・バックアップ</button>
+</nav>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const H=['squat','push','situp','natto','miso'];
+const T=['doneText','goodText','reflectText','tomorrowText'];
+const P='dailyNoteV2:';
+const today=()=>{
+let d=new Date();
+return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+};
+let date=today(),r=blank();
+
+function blank(){
+return {habits:{},tasks:[],doneText:'',goodText:'',reflectText:'',tomorrowText:'',expenses:[]};
+}
+function read(d){
+try{
+let x=JSON.parse(localStorage.getItem(P+d)||'null');
+return x?{...blank(),...x,habits:x.habits||{},tasks:Array.isArray(x.tasks)?x.tasks:[],expenses:Array.isArray(x.expenses)?x.expenses:[]}:blank();
+}catch(e){return blank();}
+}
+function save(){
+try{
+localStorage.setItem(P+date,JSON.stringify(r));
+$('saveLabel').textContent='✓ 自動保存済み';
+}catch(e){
+$('saveLabel').textContent='保存できません。バックアップを確認してください。';
+}
+}
+function render(){
+$('datePicker').value=date;
+$('dayLabel').textContent=date===today()?'今日の記録':date+' の記録';
+H.forEach(k=>document.querySelector('[data-h="'+k+'"]').checked=!!r.habits[k]);
+T.forEach(k=>$(k).value=r[k]||'');
+tasks();expenses();progress();
+}
+function progress(){
+let n=H.filter(k=>r.habits[k]).length;
+$('progress').style.width=n*20+'%';
+$('progressText').textContent=n+' / 5';
+}
+function tasks(){
+let root=$('taskList');
+root.innerHTML='';
+if(!r.tasks.length){
+root.innerHTML='<div class="empty">まだありません。今日やることを1つ追加してみよう。</div>';
+return;
+}
+r.tasks.forEach((t,i)=>{
+let d=document.createElement('div');
+d.className='task'+(t.done?' done':'');
+let c=document.createElement('input');
+c.type='checkbox';c.checked=!!t.done;
+c.addEventListener('change',()=>{
+r.tasks[i].done=c.checked;tasks();save();
+});
+let s=document.createElement('span');s.textContent=t.text;
+let b=document.createElement('button');
+b.className='danger small';b.textContent='削除';
+b.onclick=()=>{r.tasks.splice(i,1);tasks();save();};
+d.append(c,s,b);root.append(d);
+});
+}
+function expenses(){
+let root=$('expenseList');
+root.innerHTML='';
+if(!r.expenses.length)root.innerHTML='<div class="empty">支出があれば、内容と金額を入れて追加。</div>';
+r.expenses.forEach((x,i)=>{
+let d=document.createElement('div');d.className='expense';
+let s=document.createElement('span');s.className='name';s.textContent=x.name;
+let n=document.createElement('strong');n.textContent=Number(x.amount).toLocaleString('ja-JP')+'円';
+let b=document.createElement('button');b.className='danger small';b.textContent='削除';
+b.onclick=()=>{r.expenses.splice(i,1);expenses();save();};
+d.append(s,n,b);root.append(d);
+});
+$('expenseTotal').textContent=r.expenses.reduce((a,x)=>a+Number(x.amount||0),0).toLocaleString('ja-JP')+'円';
+}
+function load(d){
+date=d;r=read(d);render();
+$('saveLabel').textContent='この端末に自動保存';
+}
+function view(v){
+let a=v==='today';
+$('todayView').classList.toggle('active',a);
+$('historyView').classList.toggle('active',!a);
+$('navToday').classList.toggle('active',a);
+$('navHistory').classList.toggle('active',!a);
+if(!a)history();
+window.scrollTo(0,0);
+}
+function history(){
+let root=$('historyList');root.innerHTML='';
+let ds=Object.keys(localStorage).filter(k=>k.startsWith(P)).map(k=>k.slice(P.length)).sort().reverse();
+if(!ds.length){
+root.innerHTML='<div class="empty">保存した記録はまだありません。</div>';
+return;
+}
+ds.forEach(d=>{
+let x=read(d),n=H.filter(k=>x.habits[k]).length;
+let total=x.expenses.reduce((a,z)=>a+Number(z.amount||0),0);
+let el=document.createElement('div');el.className='historyitem';
+let info=document.createElement('div');info.className='info';
+let st=document.createElement('strong');st.textContent=d;
+let sm=document.createElement('small');sm.textContent='習慣 '+n+'/5 ・ 支出 '+total.toLocaleString('ja-JP')+'円';
+info.append(st,sm);
+let b=document.createElement('button');b.className='secondary';b.textContent='開く';
+b.onclick=()=>{load(d);view('today');};
+el.append(info,b);root.append(el);
+});
+}
+H.forEach(k=>document.querySelector('[data-h="'+k+'"]').addEventListener('change',e=>{
+r.habits[k]=e.target.checked;progress();save();
+}));
+T.forEach(k=>$(k).addEventListener('input',()=>{
+r[k]=$(k).value;save();
+}));
+$('datePicker').onchange=e=>{if(e.target.value)load(e.target.value);};
+$('addTask').onclick=()=>{
+let i=$('taskInput'),s=i.value.trim();
+if(!s){i.focus();return;}
+r.tasks.push({text:s,done:false});i.value='';tasks();save();
+};
+$('taskInput').onkeydown=e=>{
+if(e.key==='Enter'){e.preventDefault();$('addTask').click();}
+};
+$('addExpense').onclick=()=>{
+let n=$('expenseName').value.trim(),a=$('expenseAmount').value;
+if(!n||a===''||!Number.isFinite(+a)||+a<0){
+alert('内容と0以上の金額を入力してください');return;
+}
+r.expenses.push({name:n,amount:+a});
+$('expenseName').value='';$('expenseAmount').value='';
+expenses();save();
+};
+$('expenseAmount').onkeydown=e=>{if(e.key==='Enter')$('addExpense').click();};
+$('navToday').onclick=()=>view('today');
+$('navHistory').onclick=()=>view('history');
+$('exportBtn').onclick=()=>{
+let all={app:'毎日ノート',version:2,records:{}};
+Object.keys(localStorage).filter(k=>k.startsWith(P)).forEach(k=>all.records[k.slice(P.length)]=read(k.slice(P.length)));
+all.records[date]=r;
+let blob=new Blob([JSON.stringify(all,null,2)],{type:'application/json'});
+let url=URL.createObjectURL(blob),a=document.createElement('a');
+a.href=url;a.download='毎日ノート_バックアップ_'+today()+'.json';
+document.body.append(a);a.click();a.remove();URL.revokeObjectURL(url);
+$('backupStatus').textContent='保存操作を開始しました。端末の表示に従ってファイルを保存してください。';
+};
+$('importFile').onchange=async e=>{
+let f=e.target.files&&e.target.files[0];if(!f)return;
+try{
+let x=JSON.parse(await f.text());
+if(!x.records||typeof x.records!=='object')throw 0;
+let n=0;
+Object.entries(x.records).forEach(([d,v])=>{
+if(/^\d{4}-\d{2}-\d{2}$/.test(d)){
+localStorage.setItem(P+d,JSON.stringify({...blank(),...v}));n++;
+}
+});
+load(date);$('backupStatus').textContent=n+'日分の記録を読み込みました';
+}catch(err){
+$('backupStatus').textContent='読み込めませんでした。バックアップファイルを確認してください';
+}
+e.target.value='';
+};
+load(date);
+})();
+</script>
+</body>
+</html>
 <html lang="ja">
 <head>
 <meta charset="utf-8">
